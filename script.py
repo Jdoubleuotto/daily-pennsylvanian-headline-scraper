@@ -30,26 +30,36 @@ import loguru
 #         data_point = "" if target_element is None else target_element.text
 #         loguru.logger.info(f"Data point: {data_point}")
 #         return data_point
-def scrape_data_point():
-    """
-    Scrapes the sports headline from The Daily Pennsylvanian home page.
 
-    Returns:
-        str: The headline text if found, otherwise an empty string.
-    """
-    url = "https://www.thedp.com/section/sports"
-    req = requests.get(url)
+def get_latest_crossword_url():
+    response = requests.get(crosswords_page_url)
     loguru.logger.info(f"Request URL: {req.url}")
     loguru.logger.info(f"Request status code: {req.status_code}")
+    if response.ok:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        # Find the URL of the latest crossword based on the HTML structure
+        # This is a placeholder; you'll replace it with the actual selector
+        latest_crossword_link = soup.find('h3', class_='standard-link')
+        if crossword_link_tag and crossword_link_tag.a:
+            crossword_url = crossword_link_tag.a['href']
+            loguru.logger.info(f"Latest crossword URL: {crossword_url}")
+            return crossword_url
+        else:
+            loguru.logger.info("Latest crossword URL not found.")
+            return None
 
-    if req.ok:
-        soup = bs4.BeautifulSoup(req.text, "html.parser")
-        # The updated part: targeting the sports section for headlines
-        target_element = soup.find("h3", class_="standard-link")
-        data_point = "" if target_element is None else target_element.text.strip()
-        loguru.logger.info(f"Data point: {data_point}")
-        return data_point
-
+def get_latest_hints_across_down():
+    response = requests.get(get_lastest_crossword_url())
+    if response.ok:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Find the clues for words going across
+        crossword_clues = soup.find_all('div', class_='clueDiv', limit=10)
+        crossword_clues_text = [clue.find('span', class_='clueText').text for clue in crossword_clues if clue.find('span', class_='clueText')]
+        
+        # Output the clues
+        for i, clue in enumerate(crossword_clues_text, start=1):
+            print(f"Across {i}: {clue}")
 
 
 if __name__ == "__main__":
