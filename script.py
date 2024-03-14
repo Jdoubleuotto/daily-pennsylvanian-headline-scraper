@@ -13,23 +13,43 @@ import requests
 import loguru
 
 
+# def scrape_data_point():
+#     """
+#     Scrapes the main headline from The Daily Pennsylvanian home page.
+
+#     Returns:
+#         str: The headline text if found, otherwise an empty string.
+#     """
+#     req = requests.get("https://www.thedp.com")
+#     loguru.logger.info(f"Request URL: {req.url}")
+#     loguru.logger.info(f"Request status code: {req.status_code}")
+
+#     if req.ok:
+#         soup = bs4.BeautifulSoup(req.text, "html.parser")
+#         target_element = soup.find("a", class_="frontpage-link")
+#         data_point = "" if target_element is None else target_element.text
+#         loguru.logger.info(f"Data point: {data_point}")
+#         return data_point
 def scrape_data_point():
     """
-    Scrapes the main headline from The Daily Pennsylvanian home page.
+    Scrapes the sports headline from The Daily Pennsylvanian home page.
 
     Returns:
         str: The headline text if found, otherwise an empty string.
     """
-    req = requests.get("https://www.thedp.com")
+    url = "https://www.thedp.com/section/sports"
+    req = requests.get(url)
     loguru.logger.info(f"Request URL: {req.url}")
     loguru.logger.info(f"Request status code: {req.status_code}")
 
     if req.ok:
         soup = bs4.BeautifulSoup(req.text, "html.parser")
-        target_element = soup.find("a", class_="frontpage-link")
-        data_point = "" if target_element is None else target_element.text
+        # The updated part: targeting the sports section for headlines
+        target_element = soup.find("h3", class_="standard-link")
+        data_point = "" if target_element is None else target_element.text.strip()
         loguru.logger.info(f"Data point: {data_point}")
         return data_point
+
 
 
 if __name__ == "__main__":
