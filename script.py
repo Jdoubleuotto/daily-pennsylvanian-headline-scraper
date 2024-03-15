@@ -12,6 +12,9 @@ import bs4
 import requests
 import loguru
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from time import sleep
 
 # def scrape_data_point():
 #     """
@@ -33,72 +36,79 @@ import loguru
 
 crosswords_page_url = "https://www.thedp.com/section/mini-crosswords"
 
-def get_latest_crossword_url():
-    response = requests.get(crosswords_page_url)
-    loguru.logger.info(f"Request URL: {response.url}")
-    loguru.logger.info(f"Request status code: {response.status_code}")
-    if response.ok:
-        soup = BeautifulSoup(response.text, 'html.parser')
-        latest_crossword_link = soup.find('h3', class_='standard-link')
-        if latest_crossword_link and latest_crossword_link.a:
-            crossword_url = latest_crossword_link.a['href']
-            loguru.logger.info(f"Latest crossword URL: {crossword_url}")
-            return crossword_url
-        else:
-            loguru.logger.info("Latest crossword URL not found.")
-            return None
+# def get_latest_crossword_url():
+#     response = requests.get(crosswords_page_url)
+#     loguru.logger.info(f"Request URL: {response.url}")
+#     loguru.logger.info(f"Request status code: {response.status_code}")
+#     if response.ok:
+#         soup = BeautifulSoup(response.text, 'html.parser')
+#         latest_crossword_link = soup.find('h3', class_='standard-link')
+#         if latest_crossword_link and latest_crossword_link.a:
+#             crossword_url = latest_crossword_link.a['href']
+#             loguru.logger.info(f"Latest crossword URL: {crossword_url}")
+#             return crossword_url
+#         else:
+#             loguru.logger.info("Latest crossword URL not found.")
+#             return None
 
-def get_latest_hints_across_down(crossword_url):
-    response = requests.get(crossword_url)
-    if response.ok:
-        soup = BeautifulSoup(response.text, 'html.parser')
-        # Find the clues for words going across and down
-        across_clues = soup.find_all('div', class_='clueDiv crossing-clue', limit=5)
-        down_clues = soup.find_all('div', class_='clueDiv down-clue', limit=5)
+
+def scrape_data_point():
+    # Set up the Chrome options
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Ensure GUI is off
+    chrome_options.add_argument("--no-sandbox")
+    
+    # Set path to chromedriver as per your configuration
+    webdriver_path = '/path/to/chromedriver'
+    
+    # Establish a session with the web page
+    driver = webdriver.Chrome(executable_path=webdriver_path, options=chrome_options)
+    
+    # URL of the page you want to scrape
+    url = 'https://www.thedp.com/article/2024/03/mini-crossword-03-15'
+    
+    # Open the page
+    driver.get(url)
+    
+    # Wait for the dynamic content to load
+    sleep(5)
+    
+    # Now that the page is fully dynamically loaded, we can start scraping
+    clues = driver.find_elements_by_class_name('clue')
+    
+    for clue in clues:
+       
+        clue_text = clue.find_element_by_class_name('clueText').text
+        print(f'Clue {clue_text}')
+    
+    # End the Selenium browser session
+    driver.quit
+
+
+
+# def get_latest_hints_across_down(crossword_url):
+#     response = requests.get(crossword_url)
+#     if response.ok:
+#         soup = BeautifulSoup(response.text, 'html.parser')
+#         # Find the clues for words going across and down
+#         across_clues = soup.find_all('div', class_='clueDiv crossing-clue', limit=5)
+#         down_clues = soup.find_all('div', class_='clueDiv down-clue', limit=5)
         
-        # Extract the clues
-        across_clues_text = [clue.find('span', class_='clueText').get_text(strip=True) for clue in across_clues]
-        down_clues_text = [clue.find('span', class_='clueText').get_text(strip=True) for clue in down_clues]
+#         # Extract the clues
+#         across_clues_text = [clue.find('span', class_='clueText').get_text(strip=True) for clue in across_clues]
+#         down_clues_text = [clue.find('span', class_='clueText').get_text(strip=True) for clue in down_clues]
         
-        # Save clues into a dictionary
-        clues_dict = {
-            'across': across_clues_text,
-            'down': down_clues_text
-        }
-        return clues_dict
-    else:
-        loguru.logger.error(f"Failed to retrieve crossword clues from {crossword_url}")
-        return {}
+#         # Save clues into a dictionary
+#         clues_dict = {
+#             'across': across_clues_text,
+#             'down': down_clues_text
+#         }
+#         return clues_dict
+#     else:
+#         loguru.logger.error(f"Failed to retrieve crossword clues from {crossword_url}")
+#         return {}
 
-def main():
-    # Setup logger to track runtime
-    loguru.logger.add("scrape.log", rotation="1 day")
 
-    # Create data dir if needed
-    loguru.logger.info("Creating data directory if it does not exist")
-    try:
-        os.makedirs("data", exist_ok=True)
-    except Exception as e:
-        loguru.logger.error(f"Failed to create data directory: {e}")
-        sys.exit(1)
-
-    # Get the latest crossword URL
-    latest_crossword_url = get_latest_crossword_url()
-
-    # Scrape the latest hints for across and down
-    if latest_crossword_url:
-        clues = get_latest_hints_across_down(latest_crossword_url)
-
-        # Save clues to the JSON file
-        clues_file_path = "data/crossword_clues.json"
-        if clues:
-            with open(clues_file_path, "w") as f:
-                json.dump(clues, f, indent=4)
-            loguru.logger.info(f"Saved crossword clues to {clues_file_path}")
-        else:
-            loguru.logger.error("No clues to save.")
-    else:
-        loguru.logger.error("No crossword URL found.")
 
 
 if __name__ == "__main__":
