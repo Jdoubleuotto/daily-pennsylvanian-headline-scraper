@@ -12,10 +12,6 @@ import bs4
 import requests
 import loguru
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from time import sleep
-
 def get_latest_crossword_url():
     response = requests.get("https://www.thedp.com/section/crosswords")
     
