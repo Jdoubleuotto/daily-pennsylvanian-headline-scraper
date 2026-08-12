@@ -1,5 +1,5 @@
 """
-Scrapes a headline from The Daily Pennsylvanian website and saves it to a 
+Scrapes a headline from The Daily Pennsylvanian website and saves it to a
 JSON file that tracks headlines over time.
 """
 
